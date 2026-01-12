@@ -4,6 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 import statsmodels.api as sm
+from scipy.stats import t
 
 def _normalize(p, eps=1e-12):
     p = np.asarray(p, dtype=float)
@@ -270,4 +271,58 @@ def lr(x, y):
 
 # results = lr(x, y)
 # print(results)
+
+
+def two_mean_ci_test(x1, x2, conf=0.95):
+    """
+    Compare two means: mu1 - mu2 (Welch's t-test)
+
+    Inputs:
+      x1, x2 : numeric samples from group 1 and 2
+
+    Returns:
+      difference, t-stat, df, p-value, confidence interval
+    """
+    x1 = np.asarray(x1, dtype=float)
+    x2 = np.asarray(x2, dtype=float)
+
+    n1, n2 = len(x1), len(x2)
+    m1, m2 = x1.mean(), x2.mean()
+    s1, s2 = x1.std(ddof=1), x2.std(ddof=1)
+
+    diff = m1 - m2
+
+    # Standard error
+    se = np.sqrt(s1**2 / n1 + s2**2 / n2)
+
+    # Welch degrees of freedom
+    df = (s1**2 / n1 + s2**2 / n2)**2 / (
+        (s1**2 / n1)**2 / (n1 - 1) +
+        (s2**2 / n2)**2 / (n2 - 1)
+    )
+
+    t_stat = diff / se
+    p_value = 2 * (1 - t.cdf(abs(t_stat), df=df))
+
+    tcrit = t.ppf(0.5 + conf / 2, df=df)
+    ci = (diff - tcrit * se, diff + tcrit * se)
+
+    return {
+        "mean1": m1,
+        "mean2": m2,
+        "difference": diff,
+        "t": t_stat,
+        "df": df,
+        "p_value": p_value,
+        "ci": ci
+    }
+
+# group_A = [1.20, 1.05, 1.30, 1.15, 1.25]
+# group_B = [1.10, 1.00, 1.18, 1.05, 1.12]
+
+# res = two_mean_ci_test(group_A, group_B)
+
+# print("Diff (A - B):", res["difference"])
+# print("95% CI:", res["ci"])
+# print("p-value:", res["p_value"])
 

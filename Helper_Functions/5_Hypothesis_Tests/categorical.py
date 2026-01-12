@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.stats import stats, chisquare, chi2_contingency, fisher_exact
+from scipy.stats import stats, chisquare, chi2_contingency, fisher_exact, norm
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -220,3 +220,50 @@ student['acl'].value_counts().plot(
 
 plt.tight_layout()
 plt.show()
+
+
+def two_proportion_ci_test(x1, n1, x2, n2, conf=0.95):
+    """
+    Compare two proportions: p1 - p2
+
+    Inputs:
+      x1, n1 : successes and trials in group 1
+      x2, n2 : successes and trials in group 2
+
+    Returns:
+      difference, z-stat, p-value, confidence interval
+    """
+    p1 = x1 / n1
+    p2 = x2 / n2
+    diff = p1 - p2
+
+    # CI (unpooled SE)
+    zcrit = norm.ppf(0.5 + conf / 2)
+    se_ci = np.sqrt(
+        p1 * (1 - p1) / n1 +
+        p2 * (1 - p2) / n2
+    )
+    ci = (diff - zcrit * se_ci, diff + zcrit * se_ci)
+
+    # Hypothesis test (pooled SE)
+    p_pool = (x1 + x2) / (n1 + n2)
+    se_test = np.sqrt(p_pool * (1 - p_pool) * (1 / n1 + 1 / n2))
+    z = diff / se_test
+    p_value = 2 * (1 - norm.cdf(abs(z)))
+
+    return {
+        "p1_hat": p1,
+        "p2_hat": p2,
+        "difference": diff,
+        "z": z,
+        "p_value": p_value,
+        "ci": ci
+    }
+
+# Group A: 245 conversions out of 1000
+# Group B: 210 conversions out of 980
+res = two_proportion_ci_test(245, 1000, 210, 980)
+
+print("Diff (pA - pB):", res["difference"])
+print("95% CI:", res["ci"])
+print("p-value:", res["p_value"])
