@@ -1,5 +1,9 @@
 import numpy as np
 from scipy import stats
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import statsmodels.api as sm
 
 def _normalize(p, eps=1e-12):
     p = np.asarray(p, dtype=float)
@@ -76,7 +80,7 @@ def wilcoxon_rank_sum_test(x, y):
 # print("Wilcoxon rank-sum:", wilcoxon_rank_sum_test(x, y))
 
 
-# check Normality check (Shapiro–Wilk)
+# Normality check (Shapiro–Wilk)
 def is_normal(x, alpha=0.05):
     """
     Returns True if sample appears normally distributed.
@@ -134,19 +138,136 @@ def kl_divergence(x, y, bins=50, eps=1e-12):
 
     return np.sum(p * np.log(p / q))
 
-x = np.random.normal(0, 1, 1000)
-y = np.random.gamma(2.0, 1.0, 1000)
+# x = np.random.normal(0, 1, 1000)
+# y = np.random.gamma(2.0, 1.0, 1000)
 
-print(adaptive_two_sample_test(x, y))
-print("Wasserstein:", wasserstein_distance(x, y))
-print("KL:", kl_divergence(x, y))
+# print(adaptive_two_sample_test(x, y))
+# print("Wasserstein:", wasserstein_distance(x, y))
+# print("KL:", kl_divergence(x, y))
 
 
-def pearson(x, y):
+def lr(x, y):
+    """
+    Linear regression analysis for bivariate numerical data.
+
+    Parameters
+    ----------
+    x : array-like
+        Independent variable
+    y : array-like
+        Dependent variable
+
+    Returns
+    -------
+    results : dict
+        Dictionary containing regression results and statistics
+    """
+
+    import numpy as np
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    from scipy import stats
+    import statsmodels.api as sm
+
+    # ---------------------------
+    # Prepare data
+    # ---------------------------
     x = np.asarray(x)
     y = np.asarray(y)
 
-    if len(x) != len(y):
-        raise ValueError("x and y must have the same length")
+    df = pd.DataFrame({"x": x, "y": y})
 
-    return stats.pearsonr(x, y)
+    # ---------------------------
+    # Scatterplot
+    # ---------------------------
+    plt.figure()
+    plt.scatter(x, y)
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.title("Scatterplot of x vs y")
+    plt.show()
+
+    # ---------------------------
+    # Correlation
+    # ---------------------------
+    r, r_p = stats.pearsonr(x, y)
+
+    # ---------------------------
+    # Least-squares regression
+    # ---------------------------
+    X = sm.add_constant(x)
+    model = sm.OLS(y, X).fit()
+
+    b0, b1 = model.params
+
+    # ---------------------------
+    # Predictions & residuals
+    # ---------------------------
+    y_hat = model.predict(X)
+    residuals = y - y_hat
+
+    # ---------------------------
+    # Fit statistics
+    # ---------------------------
+    r2 = model.rsquared
+    rmse = np.sqrt(np.mean(residuals ** 2))
+
+    # ---------------------------
+    # Trend line plot
+    # ---------------------------
+    plt.figure()
+    plt.scatter(x, y, label="Observed")
+    plt.plot(x, y_hat, color="red", label="Least-squares line")
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.title("Least-Squares Regression Line")
+    plt.legend()
+    plt.show()
+
+    # ---------------------------
+    # Residual plot
+    # ---------------------------
+    plt.figure()
+    plt.scatter(x, residuals)
+    plt.axhline(0, linestyle="--")
+    plt.xlabel("x")
+    plt.ylabel("Residual")
+    plt.title("Residual Plot")
+    plt.show()
+
+    # ---------------------------
+    # Output summary
+    # ---------------------------
+    print("Regression Equation:")
+    print(f"ŷ = {b0:.3f} + {b1:.3f}x\n")
+
+    print("Correlation:")
+    print(f"Pearson r = {r:.3f}, p-value = {r_p:.4f}\n")
+
+    print("Model Fit:")
+    print(f"R-squared = {r2:.3f}")
+    print(f"RMSE = {rmse:.3f}")
+    print(f"F-statistic = {model.fvalue:.3f}, p-value = {model.f_pvalue:.4f}")
+
+    # ---------------------------
+    # Return structured results
+    # ---------------------------
+    return {
+        "intercept": b0,
+        "slope": b1,
+        "correlation_r": r,
+        "correlation_p": r_p,
+        "r_squared": r2,
+        "rmse": rmse,
+        "residuals": residuals,
+        "model": model
+    }
+
+
+# np.random.seed(0)
+# x = np.linspace(0, 10, 40)
+# y = 2.5 * x + np.random.normal(0, 3, size=len(x))
+
+# results = lr(x, y)
+# print(results)
+
