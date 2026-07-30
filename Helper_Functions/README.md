@@ -1,0 +1,7 @@
+- Relevance: NDCG@5/10/20, MRR@K, Recall@K, HitRate@K. Gains use the existing graded labels: impression 0, click 1, order 2. Results include evaluated slates/users and label coverage.
+- Satisfaction: CTR, order rate, average observed reward, mean explicit rating, negative-feedback rate, mean dwell time, and mean completion rate. Each optional signal reports its own coverage.
+- Freshness: fresh-item share@K, mean/median content age, and CTR/reward split between fresh and established items. Until catalog timestamps exist, newRelease supplies a clearly labelled boolean fallback; age metrics remain N/A.
+- Diversity: unique genres@K, normalized genre entropy, intra-list genre distance using Jaccard distance, and long-tail exposure share based on a configurable popularity percentile.
+- Fairness: exposure share, CTR, order rate, mean reward, and NDCG by age band, gender, occupation, geo, platform, country, and subscription when present. Reports include support, overall comparison, max–min gaps, and disparity ratios; small groups are suppressed.
+- Safety: filter-decision counts/rates by expired item, muted product type, muted genre, muted keyword, and title match; policy version; evaluated-item count; and unknown/unclassified share. “Unsafe exposure rate” is only produced when an explicit unsafe label exists—otherwise N/A.
+- Latency: /recommend and /feedback p50/p95/p99, error/timeout rates, and internal hydration, Redis, scoring, selection, and side-effect timings. Streaming reports Kafka ingest lag and impression-to-feedback delay separately.
